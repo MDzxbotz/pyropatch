@@ -157,7 +157,7 @@ class CallbackQueryHandler():
     @patchable
     async def check(self, client, update):
         if update.message:
-            key = f'{update.message.chat.id}:{update.message.id}'
+            key = f'{getattr(update.message.chat, 'id', None)}:{update.message.id}'
         elif update.inline_message_id:
             key = update.inline_message_id
         else:
