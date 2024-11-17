@@ -136,7 +136,7 @@ class CallbackQueryHandler():
     @patchable
     async def resolve_listener(self, client, update, *args):
         if update.message:
-            key = f'{getattr(update.message.chat, 'id', 0)}:{update.message.id}'
+            key = f"{getattr(update.message.chat, 'id', 0)}:{update.message.id}"
         elif update.inline_message_id:
             key = update.inline_message_id
         else:
@@ -157,7 +157,7 @@ class CallbackQueryHandler():
     @patchable
     async def check(self, client, update):
         if update.message:
-            key = f'{getattr(update.message.chat, 'id', 0)}:{update.message.id}'
+            key = f"{getattr(update.message.chat, 'id', 0)}:{update.message.id}"
         elif update.inline_message_id:
             key = update.inline_message_id
         else:
