@@ -64,7 +64,9 @@ class MessageHandler():
 
     @patchable
     async def resolve_listener(self, client, message, *args):
-        listener = client.msg_listeners.get(message.chat.id)
+        listener = client.msg_listeners.get(
+            getattr(message.chat, "id", 0)
+        )
         if self.checker:
             if listener and not listener['future'].done():
                 if (
@@ -79,7 +81,9 @@ class MessageHandler():
 
     @patchable
     async def check(self, client, update):
-        listener = client.msg_listeners.get(update.chat.id)
+        listener = client.msg_listeners.get(
+            getattr(update.chat, "id", 0)
+        )
         if self.checker:
             if listener and not listener['future'].done():
                 return await listener['filters'](client, update) if callable(listener['filters']) else True
