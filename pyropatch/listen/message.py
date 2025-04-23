@@ -65,7 +65,7 @@ class MessageHandler():
     @patchable
     async def resolve_listener(self, client, message, *args):
         listener = client.msg_listeners.get(
-            geattr(message.chat, "id", 0)
+            getattr(message.chat, "id", 0)
         )
         if self.checker:
             if listener and not listener['future'].done():
