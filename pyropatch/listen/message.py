@@ -74,7 +74,7 @@ class MessageHandler():
                 and not update_listener["future"].done()
             ):
                 update_listener['future'].set_result(message)
-                await self.user_callback(client, message, *args)
+                return await self.user_callback(client, message, *args)
                 
             listener = client.msg_listeners.get(
                 getattr(message.chat, "id", 0)
