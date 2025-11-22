@@ -155,7 +155,7 @@ class CallbackQueryHandler():
                 and not update_listener["future"].done()
             ):
                 update_listener['future'].set_result(update)
-                await self.user_callback(client, update, *args)
+                return await self.user_callback(client, update, *args)
                 
             listener = client.cbd_listeners.get(key)
             if listener and not listener['future'].done():
