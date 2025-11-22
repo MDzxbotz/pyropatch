@@ -99,8 +99,11 @@ class Client():
             key = inline_message_id
         else:
             raise TypeError("chat_id or inline_message_id is required")
-        if future == self.cbd_listeners[key]["future"]:
-            self.cbd_listeners.pop(key, None)
+        if (
+            key in self.cbd_listeners
+            and future == self.cbd_listeners[key]["future"]
+        ):
+            self.cbd_listeners.pop(key)
 
     @patchable
     def cancel_callback_listener(

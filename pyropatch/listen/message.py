@@ -42,8 +42,11 @@ class Client():
 
     @patchable
     def remove_message_listener(self, chat_id, future):
-        if future == self.msg_listeners[chat_id]["future"]:
-            self.msg_listeners.pop(chat_id, None)
+        if (
+            chat_id in self.msg_listeners
+            and future == self.msg_listeners[chat_id]["future"]
+        ): 
+            self.msg_listeners.pop(chat_id)
 
     @patchable
     def cancel_message_listener(self, chat_id):
