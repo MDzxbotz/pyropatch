@@ -1,9 +1,11 @@
 from pyrogram.types import Update
 
+from .update import *
 from .message import *
 from .callback import *
 from .inline_query import *
 from .inline_result import *
+
 import pyrogram
 from ..utils import patch2, patchable
 
@@ -20,6 +22,7 @@ class Client(Client):
         self.msg_listeners = {}
         self.inline_listeners = {}
         self.result_listeners = {}
+        self.update_listeners = {}
         self.old2___init__(*args, **kwargs)
 
     @patchable

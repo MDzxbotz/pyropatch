@@ -141,8 +141,20 @@ class CallbackQueryHandler():
             key = update.inline_message_id
         else:
             raise TypeError("chat_id or inline_message_id is required")
-        listener = client.cbd_listeners.get(key)
+
         if self.checker:
+            update_listener = client.update_listeners.get(
+                  getattr(update.message.chat, "id", 0)
+            )
+            if (
+                update_listener
+                and update_listener["message_id"] == update.message.id
+                and not update_listener["future"].done()
+            ):
+                update_listener['future'].set_result(update)
+                await self.user_callback(client, update, *args)
+                
+            listener = client.cbd_listeners.get(key)
             if listener and not listener['future'].done():
                 listener['future'].set_result(update)
                 await self.user_callback(client, update, *args)
@@ -162,8 +174,19 @@ class CallbackQueryHandler():
             key = update.inline_message_id
         else:
             raise TypeError("chat_id or inline_message_id is required")
-        listener = client.cbd_listeners.get(key)
+        
         if self.checker:
+            update_listener = client.update_listeners.get(key)
+            if (
+                update_listener
+                and not update_listener["future"].done()
+            ):
+               return (
+                   await update_listener["filters"](client, update)
+                   if callable(update_listener["filters"]) else True
+               )
+               
+            listener = client.cbd_listeners.get(key)
             if listener and not listener['future'].done():
                 return await listener['filters'](client, update) if callable(listener['filters']) else True
         if callable(self.filters):
