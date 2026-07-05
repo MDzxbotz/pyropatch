@@ -30,6 +30,7 @@ class Client(Client):
         await self._initialize_pyropatch()
         await self.old2_start(*args, **kwargs)
 
+   @patchable
    async def _initialize_pyropatch(self):
        self.add_handler(pyrogram.handlers.MessageHandler(temp, checker=True), group=-100)
        self.add_handler(pyrogram.handlers.CallbackQueryHandler(temp, checker=True), group=-100)
