@@ -138,17 +138,21 @@ class CallbackQueryHandler():
 
     @patchable
     async def resolve_listener(self, client, update, *args):
+        chat_id = getattr(update.message.chat, 'id', 0)
         if update.message:
-            key = f"{getattr(update.message.chat, 'id', 0)}:{update.message.id}"
+            key = f"{chat_id}:{update.message.id}"
         elif update.inline_message_id:
             key = update.inline_message_id
         else:
             raise TypeError("chat_id or inline_message_id is required")
 
         if self.checker:
-            update_listener = client.update_listeners.get(
-                  getattr(update.message.chat, "id", 0)
-            )
+            bulk_update_listener = client.bulk_update_listeners.get(chat_id)
+            if bulk_update_listener:
+               bulk_update_listener.send(update)
+               return await self.user_callback(client, update, *args)
+            
+            update_listener = client.update_listeners.get(chat_id)
             if (
                 update_listener
                 and update_listener["message_id"] == update.message.id
@@ -171,15 +175,19 @@ class CallbackQueryHandler():
 
     @patchable
     async def check(self, client, update):
+        chat_id = getattr(update.message.chat, 'id', 0)
         if update.message:
-            key = f"{getattr(update.message.chat, 'id', 0)}:{update.message.id}"
+            key = f"{chat_id}:{update.message.id}"
         elif update.inline_message_id:
             key = update.inline_message_id
         else:
             raise TypeError("chat_id or inline_message_id is required")
         
         if self.checker:
-            update_listener = client.update_listeners.get(key)
+            if chat_id in client.bulk_update_listeners:
+               return True 
+        
+            update_listener = client.update_listeners.get(chat_id)
             if (
                 update_listener
                 and not update_listener["future"].done()
