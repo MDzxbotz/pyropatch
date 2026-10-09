@@ -23,6 +23,8 @@ class Client(Client):
         self.inline_listeners = {}
         self.result_listeners = {}
         self.update_listeners = {}
+        self.bulk_msg_listeners = {}
+        self.bulk_update_listeners = {}
         self.old2___init__(*args, **kwargs)
 
     @patchable

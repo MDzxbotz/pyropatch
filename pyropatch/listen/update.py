@@ -1,6 +1,7 @@
 import asyncio
 import pyrogram 
 from functools import partial
+from .message import UpdatePipe
 from ..utils import patch, patchable
 
 loop = asyncio.get_event_loop() 
@@ -52,3 +53,7 @@ class Client:
             and data["future"] == future
         ):  
             self.update_listeners.pop(chat_id)
+
+    @patchable
+    def listen_updates(self, chat_id):
+        return UpdatePipe(chat_id, self.bulk_update_listeners)

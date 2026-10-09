@@ -56,6 +56,10 @@ class Client():
         listener['future'].set_exception(ListenerCanceled())
         self.remove_message_listener(chat_id, listener['future'])
 
+    @patchable
+    def listen_messages(self, chat_id: int):
+        return MessagePipe(chat_id, self.bulk_msg_listeners)
+        
 
 @patch(pyrogram.handlers.message_handler.MessageHandler)
 class MessageHandler():
@@ -69,9 +73,19 @@ class MessageHandler():
     async def resolve_listener(self, client, message, *args):
         
         if self.checker:
-            update_listener = client.update_listeners.get(
-                getattr(message.chat, "id", 0)                                   
-            )
+            chat_id = getattr(message.chat, "id", 0)
+
+            bulk_msg_listener = client.bulk_msg_listeners.get(chat_id)
+            if bulk_msg_listener:
+               bulk_msg_listener.send(message)
+               return await self.user_callback(client, message, *args)
+             
+            bulk_update_listener = client.bulk_update_listeners.get(chat_id)
+            if bulk_update_listener:
+                bulk_update_listener.send(message)
+                return await self.user_callback(client, message, *args)
+            
+            update_listener = client.update_listeners.get(chat_id)
             if (
                 update_listener
                 and not update_listener["future"].done()
@@ -79,9 +93,7 @@ class MessageHandler():
                 update_listener['future'].set_result(message)
                 return await self.user_callback(client, message, *args)
                 
-            listener = client.msg_listeners.get(
-                getattr(message.chat, "id", 0)
-            )
+            listener = client.msg_listeners.get(chat_id)
             if listener and not listener['future'].done():
                 if (
                     await listener['filters'](client, message) 
@@ -96,9 +108,15 @@ class MessageHandler():
     @patchable
     async def check(self, client, update):
         if self.checker:
-            update_listener = client.update_listeners.get(
-                getattr(update.chat, "id", 0)
-            )
+            chat_id = getattr(update.chat, "id", 0)
+
+            if chat_id in client.bulk_msg_listeners:
+               return True 
+
+            elif chat_id in client.bulk_update_listeners:
+               return True 
+            
+            update_listener = client.update_listeners.get(chat_id)
             if (
                 update_listener
                 and not update_listener["future"].done()
@@ -108,11 +126,53 @@ class MessageHandler():
                    if callable(update_listener["filters"]) else True
                )
                
-            listener = client.msg_listeners.get(
-                getattr(update.chat, "id", 0)
-            )
+            listener = client.msg_listeners.get(chat_id)
             if listener and not listener['future'].done():
                 return await listener['filters'](client, update) if callable(listener['filters']) else True
         if callable(self.filters):
             return await self.filters(client, update)
         return True
+
+
+class UpdatePipe:
+
+    def __init__(self, id, listener_map: dict):
+        self.chat_id = id
+        self.listener_map = listener_map
+        self.queue =  asyncio.Queue()
+        self.initialize = False 
+
+    async def __aenter__(self):
+        self.initialize = True 
+        self.listener_map[self.chat_id] = self
+        return self 
+
+    async def __aexit__(self, exc_type, exc, tb):
+        self.initialize = False 
+        del self.listener_map[self.chat_id]
+
+    def __aiter__(self):
+        return self 
+
+    def send(self, item):
+        self.queue.put_nowait(item)
+
+    def empty(self):
+        return self.queue.empty()
+
+    def pause(self):
+        del self.listener_map[self.chat_id]
+
+    def resume(self):
+        self.listener_map[self.chat_id] = self
+
+    async def __anext__(self):
+        if not self.initialize:
+           raise Exception("Must be called inside an async context manager")
+        return await self.queue.get() 
+    
+    async def listen(self):
+        return await anext(self)
+
+class MessagePipe(UpdatePipe):
+    pass 
