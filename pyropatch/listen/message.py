@@ -149,7 +149,7 @@ class UpdatePipe:
 
     async def __aexit__(self, exc_type, exc, tb):
         self.initialize = False 
-        del self.listener_map[self.chat_id]
+        self.listener_map.pop(self.chat_id, None)
 
     def __aiter__(self):
         return self 
