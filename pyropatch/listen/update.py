@@ -55,5 +55,9 @@ class Client:
             self.update_listeners.pop(chat_id)
 
     @patchable
-    def listen_updates(self, chat_id):
-        return UpdatePipe(chat_id, self.bulk_update_listeners)
+    def listen_updates(self, chat_id, callback_msg_id=None):
+        return UpdatePipe(
+            id=chat_id,
+            listener_map=self.bulk_update_listeners,
+            callback_msg_id=callback_msg_id
+        )

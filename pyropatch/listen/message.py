@@ -136,9 +136,10 @@ class MessageHandler():
 
 class UpdatePipe:
 
-    def __init__(self, id, listener_map: dict):
+    def __init__(self, id, listener_map: dict, callback_msg_id=None):
         self.chat_id = id
         self.listener_map = listener_map
+        self.callback_id = callback_msg_id
         self.queue =  asyncio.Queue()
         self.initialize = False 
 
@@ -165,6 +166,9 @@ class UpdatePipe:
 
     def resume(self):
         self.listener_map[self.chat_id] = self
+    
+    def set_callback_id(self, id):
+        self.callback_id = id 
 
     async def __anext__(self):
         if not self.initialize:

@@ -148,7 +148,13 @@ class CallbackQueryHandler():
 
         if self.checker:
             bulk_update_listener = client.bulk_update_listeners.get(chat_id)
-            if bulk_update_listener:
+            if (
+               bulk_update_listener
+               and (
+                   bulk_update_listener.callback_id is None
+                   or bulk_update_listener.callback_id == update.message.id
+                )
+            ):
                bulk_update_listener.send(update)
                return await self.user_callback(client, update, *args)
             
@@ -185,7 +191,12 @@ class CallbackQueryHandler():
         
         if self.checker:
             if chat_id in client.bulk_update_listeners:
-               return True 
+               listener = client.bulk_update_listeners[chat_id]
+               if (
+                  listener.callback_id is None
+                  or listener.callback_id == update.message.id
+               ): 
+                  return True
         
             update_listener = client.update_listeners.get(chat_id)
             if (
